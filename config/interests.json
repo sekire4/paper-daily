@@ -163,29 +163,6 @@
       ]
     },
     {
-      "id": "llm_agents",
-      "name": "LLM Agents 与智能体系统",
-      "description": "关注基于大语言模型的自主智能体、规划与推理、工具调用、多智能体协作、反思和自我改进、环境交互、长程任务执行以及智能体评测。优先关注可泛化的方法、机制和可靠的实验结果。",
-      "keywords": [
-        "LLM agent",
-        "language model agent",
-        "agentic",
-        "autonomous agent",
-        "multi-agent",
-        "tool use",
-        "tool calling",
-        "agent planning",
-        "agent benchmark",
-        "self-improving agent"
-      ],
-      "arxiv_categories": [
-        "cs.AI",
-        "cs.CL",
-        "cs.LG",
-        "cs.MA"
-      ]
-    },
-    {
       "id": "retrieval_augmented_generation",
       "name": "RAG 与检索增强生成",
       "description": "关注检索增强生成、Agentic RAG、查询改写、稠密与混合检索、重排序、多跳检索、图检索、检索与生成协同优化、外部知识更新以及事实性和评测。",
@@ -204,28 +181,6 @@
       "arxiv_categories": [
         "cs.CL",
         "cs.IR",
-        "cs.AI",
-        "cs.LG"
-      ]
-    },
-    {
-      "id": "large_language_models",
-      "name": "LLM 方法与能力",
-      "description": "关注大语言模型的推理、后训练、强化学习、指令微调、长上下文、上下文学习、知识与事实性、对齐和能力评测；兼顾与智能体、记忆和检索结合的基础方法。",
-      "keywords": [
-        "large language model",
-        "large language models",
-        "LLM reasoning",
-        "language model post-training",
-        "reinforcement learning",
-        "long-context",
-        "in-context learning",
-        "instruction tuning",
-        "language model evaluation",
-        "language model alignment"
-      ],
-      "arxiv_categories": [
-        "cs.CL",
         "cs.AI",
         "cs.LG"
       ]

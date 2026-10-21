@@ -72,6 +72,16 @@ class ConferenceSourceTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "automated-access challenge"):
             parse_dblp_html_toc('<script id="anubis_challenge"></script>', self.source(), 2026, "toc")
 
+    @mock.patch("scripts.collect_papers.fetch_dblp_html_toc")
+    @mock.patch("scripts.collect_papers.fetch_dblp_json")
+    def test_access_challenge_stops_further_year_requests(self, fetch_json, fetch_html):
+        fetch_json.return_value = {"result": {"hits": {"@total": "0"}}}
+        fetch_html.side_effect = RuntimeError("DBLP returned an automated-access challenge instead of a paper list")
+        with self.assertRaisesRegex(RuntimeError, "automated-access challenge"):
+            fetch_dblp_conference(self.source(), 100)
+        fetch_json.assert_called_once()
+        fetch_html.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

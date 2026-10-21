@@ -1060,6 +1060,8 @@ def fetch_dblp_conference(source: ConferenceSource, max_results: int) -> list[di
                         f"Warning: DBLP TOC request failed for {source.name} {year} pattern {pattern_index + 1}: {exc}; HTML fallback failed: {fallback_exc}",
                         file=sys.stderr,
                     )
+                    if "automated-access challenge" in str(fallback_exc):
+                        raise
                     continue
                 papers.extend(fallback_papers[:max_results])
                 print(f"DBLP {source.name} {year}: {len(fallback_papers[:max_results])} papers from TOC {toc_key}", flush=True)
@@ -2017,6 +2019,7 @@ def collect(
 
     max_per_conference = int(os.getenv("MAX_PER_CONFERENCE", "1000"))
     conference_delay_seconds = float(os.getenv("DBLP_DELAY_SECONDS", "5"))
+    dblp_access_blocked = False
     for index, source in enumerate(conference_sources):
         years_to_fetch = uncached_conference_years(source, cached_conference_years_by_source)
         skipped_cached_conference_years += len(source.years) - len(years_to_fetch)
@@ -2028,6 +2031,9 @@ def collect(
         }
         if not years_to_fetch:
             print(f"Skipping DBLP conference source from cache: {source.name} {', '.join(str(year) for year in source.years)}", flush=True)
+            continue
+        if dblp_access_blocked:
+            source_stats[source.name]["skipped_due_to_access_challenge"] = True
             continue
         if index:
             time.sleep(conference_delay_seconds)
@@ -2053,6 +2059,9 @@ def collect(
             source_stats[source.name]["failed_fetches"] += 1
             source_stats[source.name]["last_error"] = str(exc)
             print(f"Warning: DBLP request failed for {source.name}: {exc}", file=sys.stderr)
+            if "automated-access challenge" in str(exc):
+                dblp_access_blocked = True
+                print("DBLP blocked automated access; skipping remaining conference requests for this run.", file=sys.stderr)
 
     for cached_paper in existing_conference_payload.get("papers", []) if isinstance(existing_conference_payload, dict) else []:
         if not isinstance(cached_paper, dict) or cached_paper.get("source_type") != "conference":
