@@ -141,7 +141,7 @@
   "topics": [
     {
       "id": "agent_memory",
-      "name": "Agent Memory 与长期记忆",
+      "name": "Agent Memory",
       "description": "关注大语言模型智能体的长期记忆、情景记忆、语义记忆、记忆写入与检索、记忆整合与遗忘、多轮对话记忆、用户个性化和持续学习，重点判断记忆机制是否提升长期任务表现。",
       "keywords": [
         "agent memory",
@@ -164,7 +164,7 @@
     },
     {
       "id": "retrieval_augmented_generation",
-      "name": "RAG 与检索增强生成",
+      "name": "RAG",
       "description": "关注检索增强生成、Agentic RAG、查询改写、稠密与混合检索、重排序、多跳检索、图检索、检索与生成协同优化、外部知识更新以及事实性和评测。",
       "keywords": [
         "retrieval-augmented generation",
