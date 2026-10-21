@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   collect-and-deploy:
-    if: github.event_name != 'issues' || github.event.issue.title == 'Research Interests'
+    if: github.event_name != 'issues' || (github.event.issue.title == 'Research Interests' && github.event.issue.user.login == github.repository_owner)
     runs-on: ubuntu-latest
     environment:
       name: github-pages

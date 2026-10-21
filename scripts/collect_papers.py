@@ -296,6 +296,7 @@ def load_issue_config(default_config: dict[str, Any]) -> dict[str, Any]:
     title = os.getenv("CONFIG_ISSUE_TITLE", "Research Interests")
     if not token or not repository:
         return default_config
+    trusted_author = repository.split("/", 1)[0].casefold()
 
     query = urllib.parse.urlencode({"state": "open", "per_page": "30"})
     url = f"https://api.github.com/repos/{repository}/issues?{query}"
@@ -307,6 +308,8 @@ def load_issue_config(default_config: dict[str, Any]) -> dict[str, Any]:
 
     for issue in issues:
         if "pull_request" in issue:
+            continue
+        if str((issue.get("user") or {}).get("login") or "").casefold() != trusted_author:
             continue
         if issue.get("title", "").strip().lower() == title.lower():
             body = issue.get("body") or ""
