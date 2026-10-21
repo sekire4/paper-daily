@@ -1,128 +1,149 @@
 {
   "sources": [
-    { "type": "arxiv", "name": "arXiv" }
+    {
+      "type": "arxiv",
+      "name": "arXiv"
+    }
   ],
   "conference_sources": {
     "enabled": true,
-    "current_year": 2026,
+    "include_default_venues": false,
     "lookback_years": 2,
     "venues": [
       {
-        "id": "isca",
-        "name": "ISCA",
-        "group": "computer architecture",
-        "dblp_toc_patterns": ["db/conf/isca/isca{year}.bht"]
-      },
-      {
-        "id": "micro",
-        "name": "MICRO",
-        "group": "computer architecture",
-        "dblp_toc_patterns": ["db/conf/micro/micro{year}.bht"]
-      },
-      {
-        "id": "hpca",
-        "name": "HPCA",
-        "group": "computer architecture",
-        "dblp_toc_patterns": ["db/conf/hpca/hpca{year}.bht"]
-      },
-      {
-        "id": "asplos",
-        "name": "ASPLOS",
-        "group": "computer architecture",
+        "id": "acl",
+        "name": "ACL",
+        "group": "natural language processing",
         "dblp_toc_patterns": [
-          "db/conf/asplos/asplos{year}-1.bht",
-          "db/conf/asplos/asplos{year}-2.bht",
-          "db/conf/asplos/asplos{year}-3.bht",
-          "db/conf/asplos/asplos{year}-4.bht"
+          "db/conf/acl/acl{year}-1.bht",
+          "db/conf/acl/acl{year}-2.bht"
         ]
       },
       {
-        "id": "mlsys",
-        "name": "MLSys",
-        "group": "systems for machine learning",
-        "dblp_toc_patterns": ["db/conf/mlsys/mlsys{year}.bht"]
+        "id": "emnlp",
+        "name": "EMNLP",
+        "group": "natural language processing",
+        "dblp_toc_patterns": [
+          "db/conf/emnlp/emnlp{year}.bht"
+        ]
       },
       {
-        "id": "eurosys",
-        "name": "EuroSys",
-        "group": "systems",
-        "dblp_toc_patterns": ["db/conf/eurosys/eurosys{year}.bht"]
+        "id": "iclr",
+        "name": "ICLR",
+        "group": "machine learning",
+        "dblp_toc_patterns": [
+          "db/conf/iclr/iclr{year}.bht"
+        ]
+      },
+      {
+        "id": "icml",
+        "name": "ICML",
+        "group": "machine learning",
+        "dblp_toc_patterns": [
+          "db/conf/icml/icml{year}.bht"
+        ]
+      },
+      {
+        "id": "neurips",
+        "name": "NeurIPS",
+        "group": "machine learning",
+        "dblp_toc_patterns": [
+          "db/conf/nips/neurips{year}.bht"
+        ]
       }
     ]
   },
   "topics": [
     {
-      "id": "llm_low_precision_quantization",
-      "name": "大模型低精度量化",
-      "description": "关注大语言模型低比特量化、混合精度、量化感知训练、后训练量化、权重量化、激活量化、KV cache 量化以及量化对推理性能和精度的影响。",
+      "id": "agent_memory",
+      "name": "Agent Memory 与长期记忆",
+      "description": "关注大语言模型智能体的长期记忆、情景记忆、语义记忆、记忆写入与检索、记忆整合与遗忘、多轮对话记忆、用户个性化和持续学习，重点判断记忆机制是否提升长期任务表现。",
       "keywords": [
-        "large language model quantization",
-        "LLM quantization",
-        "low-bit quantization",
-        "post-training quantization",
-        "weight-only quantization",
-        "activation quantization",
-        "mixed precision",
-        "FP8",
-        "INT4",
-        "INT8",
-        "KV cache quantization"
+        "agent memory",
+        "agentic memory",
+        "long-term memory",
+        "episodic memory",
+        "memory-augmented agent",
+        "conversational memory",
+        "memory consolidation",
+        "memory retrieval",
+        "memory management",
+        "personalized agent"
       ],
-      "arxiv_categories": ["cs.CL", "cs.LG", "cs.AI", "cs.DC"]
+      "arxiv_categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.LG",
+        "cs.IR"
+      ]
     },
     {
-      "id": "tensor_compute_unit_architecture",
-      "name": "张量计算单元结构",
-      "description": "关注 GPU/NPU/TPU 张量计算单元、矩阵乘加阵列、数据流架构、片上存储层次、低精度张量核、AI 加速器微架构和算子映射。",
+      "id": "llm_agents",
+      "name": "LLM Agents 与智能体系统",
+      "description": "关注基于大语言模型的自主智能体、规划与推理、工具调用、多智能体协作、反思和自我改进、环境交互、长程任务执行以及智能体评测。优先关注可泛化的方法、机制和可靠的实验结果。",
       "keywords": [
-        "tensor processing unit",
-        "tensor core",
-        "matrix multiply unit",
-        "systolic array",
-        "AI accelerator architecture",
-        "NPU architecture",
-        "GPU tensor core",
-        "low precision tensor compute",
-        "dataflow architecture",
-        "on-chip memory hierarchy"
+        "LLM agent",
+        "language model agent",
+        "agentic",
+        "autonomous agent",
+        "multi-agent",
+        "tool use",
+        "tool calling",
+        "agent planning",
+        "agent benchmark",
+        "self-improving agent"
       ],
-      "arxiv_categories": ["cs.AR", "cs.DC", "cs.LG", "cs.PF"]
+      "arxiv_categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.LG",
+        "cs.MA"
+      ]
     },
     {
-      "id": "llm_inference_cluster_communication",
-      "name": "大模型推理集群通信优化",
-      "description": "关注分布式大模型推理、prefill/decode 分离、张量并行、流水并行、专家并行、跨节点通信、调度、负载均衡和 serving 系统吞吐延迟优化。",
+      "id": "retrieval_augmented_generation",
+      "name": "RAG 与检索增强生成",
+      "description": "关注检索增强生成、Agentic RAG、查询改写、稠密与混合检索、重排序、多跳检索、图检索、检索与生成协同优化、外部知识更新以及事实性和评测。",
       "keywords": [
-        "LLM inference serving",
-        "distributed inference",
-        "inference cluster",
-        "tensor parallelism",
-        "pipeline parallelism",
-        "expert parallelism",
-        "all-reduce",
-        "collective communication",
-        "prefill decode disaggregation",
-        "serving scheduler"
+        "retrieval-augmented generation",
+        "retrieval augmented generation",
+        "agentic RAG",
+        "GraphRAG",
+        "dense retrieval",
+        "multi-hop retrieval",
+        "retrieval-augmented language model",
+        "knowledge-intensive",
+        "hybrid retrieval",
+        "reranking"
       ],
-      "arxiv_categories": ["cs.DC", "cs.PF", "cs.CL", "cs.LG"]
+      "arxiv_categories": [
+        "cs.CL",
+        "cs.IR",
+        "cs.AI",
+        "cs.LG"
+      ]
     },
     {
-      "id": "kvcache_compression_storage_scheduling",
-      "name": "KV cache 压缩与存储调度",
-      "description": "关注大模型推理中的 KV cache 压缩、淘汰、分页、卸载、预取、层级存储、显存管理和长上下文推理效率优化。",
+      "id": "large_language_models",
+      "name": "LLM 方法与能力",
+      "description": "关注大语言模型的推理、后训练、强化学习、指令微调、长上下文、上下文学习、知识与事实性、对齐和能力评测；兼顾与智能体、记忆和检索结合的基础方法。",
       "keywords": [
-        "KV cache compression",
-        "KV cache eviction",
-        "KV cache scheduling",
-        "paged attention",
-        "attention cache",
-        "long context inference",
-        "memory offloading",
-        "GPU memory management",
-        "cache prefetching",
-        "LLM serving memory"
+        "large language model",
+        "large language models",
+        "LLM reasoning",
+        "language model post-training",
+        "reinforcement learning",
+        "long-context",
+        "in-context learning",
+        "instruction tuning",
+        "language model evaluation",
+        "language model alignment"
       ],
-      "arxiv_categories": ["cs.CL", "cs.LG", "cs.DC", "cs.PF"]
+      "arxiv_categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG"
+      ]
     }
   ]
 }
