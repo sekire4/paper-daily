@@ -24,7 +24,7 @@ from typing import Any
 
 
 ARXIV_API_URL = "https://export.arxiv.org/api/query"
-DBLP_API_URL = os.getenv("DBLP_API_URL", "http://dblp.org/search/publ/api")
+DBLP_API_URL = os.getenv("DBLP_API_URL", "https://dblp.org/search/publ/api")
 OPENALEX_WORKS_URL = "https://api.openalex.org/works"
 CROSSREF_WORKS_URL = "https://api.crossref.org/works"
 SEMANTIC_SCHOLAR_SEARCH_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -73,6 +73,7 @@ class ConferenceSource:
     dblp_toc_patterns: list[str]
     years: list[int]
     enabled: bool = True
+    dblp_volume_offset: int = 0
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -258,6 +259,7 @@ def parse_conference_sources(config: dict[str, Any], now: dt.datetime) -> list[C
             dblp_toc_patterns=[str(pattern) for pattern in patterns if str(pattern).strip()],
             years=years,
             enabled=bool(item.get("enabled", True)),
+            dblp_volume_offset=int(item.get("dblp_volume_offset", 0)),
         )
         if source.enabled and source.dblp_toc_patterns:
             sources.append(source)
@@ -936,7 +938,7 @@ def dblp_html_url_for_toc(toc_key: str) -> str:
         path = path[:-4] + ".html"
     elif not path.endswith(".html"):
         path += ".html"
-    return "http://dblp.org/" + path.lstrip("/")
+    return "https://dblp.org/" + path.lstrip("/")
 
 
 def conference_paper_from_dblp_html_chunk(
@@ -993,7 +995,12 @@ def conference_paper_from_dblp_html_chunk(
 
 
 def parse_dblp_html_toc(html_text: str, source: ConferenceSource, year: int, toc_key: str) -> list[dict[str, Any]]:
-    starts = list(re.finditer(r'<li class="entry inproceedings" id="([^"]+)"', html_text))
+    if 'anubis_challenge' in html_text or "Making sure you&#39;re not a bot" in html_text:
+        raise RuntimeError("DBLP returned an automated-access challenge instead of a paper list")
+    starts = list(re.finditer(
+        r'<li\b(?=[^>]*\bclass="[^"]*\bentry\b[^"]*\b(?:inproceedings|article)\b)(?=[^>]*\bid="([^"]+)")[^>]*>',
+        html_text,
+    ))
     papers = []
     for index, match in enumerate(starts):
         key = html.unescape(match.group(1))
@@ -1036,11 +1043,14 @@ def fetch_dblp_conference(source: ConferenceSource, max_results: int) -> list[di
         for pattern_index, pattern in enumerate(source.dblp_toc_patterns):
             if request_count:
                 time.sleep(pattern_delay_seconds)
-            toc_key = pattern.format(year=year)
+            toc_key = pattern.format(year=year, volume=year - source.dblp_volume_offset)
             query = f"toc:{toc_key}:"
             request_count += 1
             try:
                 data = fetch_dblp_json(query, max_results)
+                toc_papers = parse_dblp_hits(data, source, year, toc_key)
+                if not toc_papers:
+                    raise RuntimeError("DBLP search returned no paper records; checking the TOC page")
             except Exception as exc:
                 try:
                     fallback_papers = fetch_dblp_html_toc(toc_key, source, year)
@@ -1052,8 +1062,10 @@ def fetch_dblp_conference(source: ConferenceSource, max_results: int) -> list[di
                     )
                     continue
                 papers.extend(fallback_papers[:max_results])
+                print(f"DBLP {source.name} {year}: {len(fallback_papers[:max_results])} papers from TOC {toc_key}", flush=True)
                 continue
-            papers.extend(parse_dblp_hits(data, source, year, toc_key))
+            papers.extend(toc_papers)
+            print(f"DBLP {source.name} {year}: {len(toc_papers)} papers from API {toc_key}", flush=True)
     if not papers and errors:
         raise errors[-1]
     return dedupe_papers(papers)
@@ -2026,6 +2038,7 @@ def collect(
             dblp_toc_patterns=source.dblp_toc_patterns,
             years=years_to_fetch,
             enabled=source.enabled,
+            dblp_volume_offset=source.dblp_volume_offset,
         )
         print(f"Fetching DBLP conference papers for source: {source.name} {', '.join(str(year) for year in years_to_fetch)}", flush=True)
         try:

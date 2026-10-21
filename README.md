@@ -1,5 +1,11 @@
 # Paper Daily
 
+当前 Fork 的研究方向为 Agent Memory、LLM Agents、RAG 和 LLM，来源保留 arXiv，并启用以下 15 个会议：AAAI、NeurIPS、ACL、CVPR、ICCV、ICML、ICLR、EMNLP、SIGMOD、SIGKDD、ICDE、SIGIR、VLDB、WWW、RTSS。ISCA、MICRO、HPCA、ASPLOS、MLSys、EuroSys 在当前配置中未启用。后文的默认方向与默认会议说明来自上游项目，当前运行配置以 `config/interests.json` 和打开的 `Research Interests` Issue 为准。
+
+SIGMOD 同时读取 PACMMOD 题录，VLDB 读取 PVLDB 题录；配置中的 `dblp_volume_offset` 用于按 `volume = year - offset` 自动计算卷号，`dblp_toc_patterns` 可使用 `{year}` 和 `{volume}`。会议年份默认随当前年份滚动，覆盖最近两年。
+
+本 Fork 的网页地址为 https://sekire4.github.io/paper-daily/ 。模型在 GitHub Actions Variables 中配置为 `deepseek-flash`，每次默认最多生成 20 篇模型分析；API Key 存在 GitHub Actions Secret `DEEPSEEK_API_KEY` 中。
+
 每天自动追踪 arXiv 新论文，按你的研究方向打分，并生成中文论文摘要。项目使用 GitHub Actions 自动抓取论文，用 GitHub Pages 展示网页。默认页面分成“每日新论文”和“顶会精品”两个集合，互不挤占存储上限。
 
 ## 你需要配置什么

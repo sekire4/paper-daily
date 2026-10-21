@@ -50,6 +50,91 @@
         "dblp_toc_patterns": [
           "db/conf/nips/neurips{year}.bht"
         ]
+      },
+      {
+        "id": "aaai",
+        "name": "AAAI",
+        "group": "artificial intelligence",
+        "dblp_toc_patterns": [
+          "db/conf/aaai/aaai{year}.bht"
+        ]
+      },
+      {
+        "id": "cvpr",
+        "name": "CVPR",
+        "group": "computer vision",
+        "dblp_toc_patterns": [
+          "db/conf/cvpr/cvpr{year}.bht"
+        ]
+      },
+      {
+        "id": "iccv",
+        "name": "ICCV",
+        "group": "computer vision",
+        "dblp_toc_patterns": [
+          "db/conf/iccv/iccv{year}.bht"
+        ]
+      },
+      {
+        "id": "sigmod",
+        "name": "SIGMOD",
+        "group": "databases",
+        "dblp_toc_patterns": [
+          "db/journals/pacmmod/pacmmod{volume}.bht",
+          "db/conf/sigmod/sigmod{year}.bht"
+        ],
+        "dblp_volume_offset": 2022
+      },
+      {
+        "id": "kdd",
+        "name": "SIGKDD",
+        "group": "data mining",
+        "dblp_toc_patterns": [
+          "db/conf/kdd/kdd{year}-1.bht",
+          "db/conf/kdd/kdd{year}-2.bht",
+          "db/conf/kdd/kdd{year}.bht"
+        ]
+      },
+      {
+        "id": "icde",
+        "name": "ICDE",
+        "group": "databases",
+        "dblp_toc_patterns": [
+          "db/conf/icde/icde{year}.bht"
+        ]
+      },
+      {
+        "id": "sigir",
+        "name": "SIGIR",
+        "group": "information retrieval",
+        "dblp_toc_patterns": [
+          "db/conf/sigir/sigir{year}.bht"
+        ]
+      },
+      {
+        "id": "vldb",
+        "name": "VLDB",
+        "group": "databases",
+        "dblp_toc_patterns": [
+          "db/journals/pvldb/pvldb{volume}.bht"
+        ],
+        "dblp_volume_offset": 2007
+      },
+      {
+        "id": "www",
+        "name": "WWW",
+        "group": "web and information retrieval",
+        "dblp_toc_patterns": [
+          "db/conf/www/www{year}.bht"
+        ]
+      },
+      {
+        "id": "rtss",
+        "name": "RTSS",
+        "group": "real-time systems",
+        "dblp_toc_patterns": [
+          "db/conf/rtss/rtss{year}.bht"
+        ]
       }
     ]
   },
