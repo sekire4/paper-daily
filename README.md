@@ -4,6 +4,8 @@
 
 SIGMOD 同时读取 PACMMOD 题录，VLDB 读取 PVLDB 题录；配置中的 `dblp_volume_offset` 用于按 `volume = year - offset` 自动计算卷号，`dblp_toc_patterns` 可使用 `{year}` 和 `{volume}`。会议年份默认随当前年份滚动，覆盖最近两年。
 
+会议采集使用 [DBLP 官方 SPARQL 接口](https://sparql.dblp.org/)，按 `listedOnTocPage` 精确读取以上配置的会议目录，不再请求 DBLP 搜索 API 或目录网页。每页读取 200 篇论文，`MAX_PER_CONFERENCE` 仍限制每个目录的总读取数量；分页限制按论文计算，保留完整作者列表及顺序。接口临时失败会重试，某个会议读取失败时继续保留已有缓存，不把该会议的部分结果写成完整缓存。无需额外 API Key。
+
 本 Fork 的网页地址为 https://sekire4.github.io/paper-daily/ 。模型在 GitHub Actions Variables 中配置为 `deepseek-flash`，每次默认最多生成 20 篇模型分析；API Key 存在 GitHub Actions Secret `DEEPSEEK_API_KEY` 中。
 
 每天自动追踪 arXiv 新论文，按你的研究方向打分，并生成中文论文摘要。项目使用 GitHub Actions 自动抓取论文，用 GitHub Pages 展示网页。默认页面分成“每日新论文”和“顶会精品”两个集合，互不挤占存储上限。
@@ -376,8 +378,9 @@ Google Scholar 没有稳定官方公开 API，不建议直接爬网页。直接�
 | `LLM_SUMMARIZE_TITLE_ONLY` | `false` | 是否对缺少摘要的论文调用模型；默认关闭，避免标题猜测 |
 | `SOURCE_DELAY_SECONDS` | `3` | 非 arXiv 来源的 topic 请求间隔 |
 | `DBLP_DELAY_SECONDS` | `5` | 不同 DBLP 会议源之间的请求间隔 |
-| `DBLP_PATTERN_DELAY_SECONDS` | `3` | 同一会议不同 DBLP TOC pattern 之间的请求间隔 |
+| `DBLP_PATTERN_DELAY_SECONDS` | `3` | 同一会议的 SPARQL 分页和不同 TOC 之间的请求间隔 |
 | `DBLP_RETRIES` | `3` | DBLP 临时错误的最大尝试次数 |
+| `DBLP_TIMEOUT_SECONDS` | `45` | DBLP SPARQL 单次请求的超时秒数 |
 | `MAX_PER_CONFERENCE` | `1000` | 每个 DBLP TOC 最多读取的题录数 |
 | `ARXIV_QUERY_MODE` | `keyword` | `keyword` 默认只按关键词抓取，避免分类宽搜淹没相关论文；`broad` 用关键词或分类的单次宽查询；`strict` 使用关键词和分类同时匹配 |
 | `ARXIV_SORT_BY` | `lastUpdatedDate` | arXiv 排序字段，默认按最近更新，能捕获当天修订的论文 |

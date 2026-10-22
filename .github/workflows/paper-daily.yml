@@ -86,6 +86,7 @@ jobs:
           DBLP_DELAY_SECONDS: ${{ vars.DBLP_DELAY_SECONDS || '5' }}
           DBLP_PATTERN_DELAY_SECONDS: ${{ vars.DBLP_PATTERN_DELAY_SECONDS || '3' }}
           DBLP_RETRIES: ${{ vars.DBLP_RETRIES || '3' }}
+          DBLP_TIMEOUT_SECONDS: ${{ vars.DBLP_TIMEOUT_SECONDS || '45' }}
           MAX_PER_CONFERENCE: ${{ vars.MAX_PER_CONFERENCE || '1000' }}
           ARXIV_QUERY_MODE: ${{ vars.ARXIV_QUERY_MODE || 'keyword' }}
           ARXIV_SORT_BY: ${{ vars.ARXIV_SORT_BY || 'lastUpdatedDate' }}

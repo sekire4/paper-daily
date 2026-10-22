@@ -25,6 +25,7 @@ from typing import Any
 
 ARXIV_API_URL = "https://export.arxiv.org/api/query"
 DBLP_API_URL = os.getenv("DBLP_API_URL", "https://dblp.org/search/publ/api")
+DBLP_SPARQL_URL = "https://sparql.dblp.org/sparql"
 OPENALEX_WORKS_URL = "https://api.openalex.org/works"
 CROSSREF_WORKS_URL = "https://api.crossref.org/works"
 SEMANTIC_SCHOLAR_SEARCH_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -1037,42 +1038,102 @@ def fetch_dblp_html_toc(toc_key: str, source: ConferenceSource, year: int) -> li
     raise RuntimeError(f"DBLP HTML request failed: {last_error}")
 
 
+def dblp_sparql_query(toc_key: str, limit: int, offset: int) -> str:
+    # RDF TOC identifiers have no .bht/.html suffix. Keep the existing venue config.
+    toc_path = re.sub(r"\.(?:bht|html)$", "", toc_key)
+    if not re.fullmatch(r"db/(?:conf|journals)/[A-Za-z0-9_/-]+", toc_path):
+        raise ValueError(f"Invalid DBLP TOC path: {toc_key}")
+    return f'''PREFIX dblp: <https://dblp.org/rdf/schema#>
+SELECT ?paper ?title ?author ?ordinal ?doi ?ee ?pages WHERE {{
+  {{ SELECT DISTINCT ?paper ?title WHERE {{
+      ?paper dblp:listedOnTocPage <https://dblp.org/{toc_path}> ;
+             dblp:title ?title .
+      VALUES ?type {{ dblp:Inproceedings dblp:Article }}
+      ?paper a ?type .
+    }} ORDER BY ?paper LIMIT {max(1, int(limit))} OFFSET {max(0, int(offset))}
+  }}
+  OPTIONAL {{ ?paper dblp:hasSignature ?signature .
+             ?signature a dblp:AuthorSignature ; dblp:signatureDblpName ?author ;
+                        dblp:signatureOrdinal ?ordinal . }}
+  OPTIONAL {{ ?paper dblp:doi ?doi . }}
+  OPTIONAL {{ ?paper dblp:primaryDocumentPage ?ee . }}
+  OPTIONAL {{ ?paper dblp:pagination ?pages . }}
+}} ORDER BY ?paper ?ordinal'''
+
+
+def fetch_dblp_sparql(query: str) -> dict[str, Any]:
+    url = f"{DBLP_SPARQL_URL}?{urllib.parse.urlencode({'query': query})}"
+    attempts = max(1, env_int("DBLP_RETRIES", 3))
+    for attempt in range(attempts):
+        req = urllib.request.Request(url, headers={
+            "Accept": "application/sparql-results+json",
+            "User-Agent": "paper-daily-collector/1.0 (+https://github.com/sekire4/paper-daily)",
+        })
+        try:
+            with urllib.request.urlopen(req, timeout=float(os.getenv("DBLP_TIMEOUT_SECONDS", "45"))) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            if not isinstance(data, dict) or not isinstance(data.get("results", {}).get("bindings"), list):
+                raise ValueError("DBLP SPARQL returned an invalid result document")
+            return data
+        except Exception as exc:
+            if not is_retryable_dblp_error(exc) or attempt == attempts - 1:
+                raise
+            wait = dblp_retry_wait_seconds(exc, attempt)
+            print(f"DBLP SPARQL temporary error: {exc}; retrying in {wait:.0f}s", flush=True)
+            time.sleep(wait)
+    raise RuntimeError("DBLP SPARQL request failed")
+
+
+def parse_dblp_sparql(data: dict[str, Any], source: ConferenceSource, year: int, toc_key: str) -> list[dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
+    authors: dict[str, dict[int, str]] = {}
+    for row in data["results"]["bindings"]:
+        def value(field: str) -> str:
+            return str((row.get(field) or {}).get("value") or "")
+
+        uri = value("paper")
+        if not uri.startswith("https://dblp.org/rec/") or not value("title"):
+            continue
+        key = uri.removeprefix("https://dblp.org/rec/")
+        info = records.setdefault(key, {"key": key, "title": value("title"), "url": uri})
+        for field in ("doi", "ee", "pages"):
+            if value(field):
+                info[field] = value(field)
+        if value("author"):
+            ordinal = int(value("ordinal") or 0)
+            authors.setdefault(key, {})[ordinal] = value("author")
+    hits = []
+    for key, info in records.items():
+        info["authors"] = {"author": [name for _, name in sorted(authors.get(key, {}).items())]}
+        hits.append({"info": info})
+    return parse_dblp_hits({"result": {"hits": {"hit": hits}}}, source, year, toc_key)
+
+
 def fetch_dblp_conference(source: ConferenceSource, max_results: int) -> list[dict[str, Any]]:
     papers = []
-    errors = []
     request_count = 0
-    pattern_delay_seconds = float(os.getenv("DBLP_PATTERN_DELAY_SECONDS", "3"))
+    delay = float(os.getenv("DBLP_PATTERN_DELAY_SECONDS", "3"))
+    page_size = 200
     for year in source.years:
-        for pattern_index, pattern in enumerate(source.dblp_toc_patterns):
-            if request_count:
-                time.sleep(pattern_delay_seconds)
+        for pattern in source.dblp_toc_patterns:
             toc_key = pattern.format(year=year, volume=year - source.dblp_volume_offset)
-            query = f"toc:{toc_key}:"
-            request_count += 1
-            try:
-                data = fetch_dblp_json(query, max_results)
-                toc_papers = parse_dblp_hits(data, source, year, toc_key)
-                if not toc_papers:
-                    raise RuntimeError("DBLP search returned no paper records; checking the TOC page")
-            except Exception as exc:
-                try:
-                    fallback_papers = fetch_dblp_html_toc(toc_key, source, year)
-                except Exception as fallback_exc:
-                    errors.append(fallback_exc)
-                    print(
-                        f"Warning: DBLP TOC request failed for {source.name} {year} pattern {pattern_index + 1}: {exc}; HTML fallback failed: {fallback_exc}",
-                        file=sys.stderr,
-                    )
-                    if "automated-access challenge" in str(fallback_exc):
-                        raise
-                    continue
-                papers.extend(fallback_papers[:max_results])
-                print(f"DBLP {source.name} {year}: {len(fallback_papers[:max_results])} papers from TOC {toc_key}", flush=True)
-                continue
+            toc_papers = []
+            offset = 0
+            while offset < max_results:
+                if request_count:
+                    time.sleep(delay)
+                limit = min(page_size, max_results - offset)
+                query = dblp_sparql_query(toc_key, limit, offset)
+                request_count += 1
+                # Propagate failures so partial years are never mistaken for complete caches.
+                data = fetch_dblp_sparql(query)
+                page = parse_dblp_sparql(data, source, year, toc_key)
+                toc_papers.extend(page)
+                if len(page) < limit:
+                    break
+                offset += limit
             papers.extend(toc_papers)
-            print(f"DBLP {source.name} {year}: {len(toc_papers)} papers from API {toc_key}", flush=True)
-    if not papers and errors:
-        raise errors[-1]
+            print(f"DBLP SPARQL {source.name} {year}: {len(toc_papers)} papers from TOC {toc_key}", flush=True)
     return dedupe_papers(papers)
 
 
@@ -2022,21 +2083,18 @@ def collect(
 
     max_per_conference = int(os.getenv("MAX_PER_CONFERENCE", "1000"))
     conference_delay_seconds = float(os.getenv("DBLP_DELAY_SECONDS", "5"))
-    dblp_access_blocked = False
     for index, source in enumerate(conference_sources):
         years_to_fetch = uncached_conference_years(source, cached_conference_years_by_source)
         skipped_cached_conference_years += len(source.years) - len(years_to_fetch)
         source_stats[source.name] = {
             "type": "conference",
+            "backend": "dblp_sparql",
             "successful_fetches": 0,
             "failed_fetches": 0,
             "skipped_cached_years": len(source.years) - len(years_to_fetch),
         }
         if not years_to_fetch:
             print(f"Skipping DBLP conference source from cache: {source.name} {', '.join(str(year) for year in source.years)}", flush=True)
-            continue
-        if dblp_access_blocked:
-            source_stats[source.name]["skipped_due_to_access_challenge"] = True
             continue
         if index:
             time.sleep(conference_delay_seconds)
@@ -2049,7 +2107,7 @@ def collect(
             enabled=source.enabled,
             dblp_volume_offset=source.dblp_volume_offset,
         )
-        print(f"Fetching DBLP conference papers for source: {source.name} {', '.join(str(year) for year in years_to_fetch)}", flush=True)
+        print(f"Fetching DBLP SPARQL conference papers for source: {source.name} {', '.join(str(year) for year in years_to_fetch)}", flush=True)
         try:
             source_papers = fetch_dblp_conference(source_to_fetch, max_per_conference)
             all_candidates.extend(source_papers)
@@ -2062,9 +2120,6 @@ def collect(
             source_stats[source.name]["failed_fetches"] += 1
             source_stats[source.name]["last_error"] = str(exc)
             print(f"Warning: DBLP request failed for {source.name}: {exc}", file=sys.stderr)
-            if "automated-access challenge" in str(exc):
-                dblp_access_blocked = True
-                print("DBLP blocked automated access; skipping remaining conference requests for this run.", file=sys.stderr)
 
     for cached_paper in existing_conference_payload.get("papers", []) if isinstance(existing_conference_payload, dict) else []:
         if not isinstance(cached_paper, dict) or cached_paper.get("source_type") != "conference":
